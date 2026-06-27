@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>New Tab</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;background:#000;overflow:auto}
+  body{font-family:-apple-system,'Segoe UI',Roboto,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;padding:2rem;min-height:100vh}
+  #clock{font-size:80px;font-weight:300;letter-spacing:-3px;line-height:1}
+  #date{font-size:15px;color:#666;margin-top:10px;letter-spacing:.5px}
+  .divider{margin:2.5rem 0;width:60px;height:1px;background:#222}
+  #arabic{font-size:32px;color:#e8e8e8;line-height:1.7;direction:rtl;max-width:640px;font-family:'Traditional Arabic','Scheherazade',serif}
+  #trans{font-size:16px;color:#888;margin-top:16px;line-height:1.6;max-width:520px;font-style:italic}
+  #ref{font-size:13px;color:#555;margin-top:10px;letter-spacing:.5px}
+  #refresh{margin-top:1.8rem;font-size:13px;color:#666;cursor:pointer;border:1px solid #2a2a2a;padding:8px 18px;border-radius:20px;transition:all .2s;user-select:none}
+  #refresh:hover{color:#aaa;border-color:#444}
+  #marks{margin-top:3rem;display:flex;gap:12px;flex-wrap:wrap;justify-content:center;max-width:560px}
+  .mark{position:relative;text-decoration:none;color:#aaa;background:#111;border:1px solid #222;border-radius:10px;padding:14px 16px;font-size:13px;min-width:80px;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:8px}
+  .mark:hover{border-color:#444;color:#fff}
+  .mark .ic{font-size:22px;font-weight:600}
+  .mark .del{position:absolute;top:-7px;right:-7px;width:18px;height:18px;border-radius:50%;background:#333;color:#ccc;font-size:12px;line-height:18px;display:none;cursor:pointer;border:1px solid #555}
+  .mark:hover .del{display:block}
+  .mark .del:hover{background:#a33;color:#fff}
+  #add{color:#555;background:#0a0a0a;border:1px dashed #2a2a2a;border-radius:10px;padding:14px 16px;font-size:13px;min-width:80px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all .2s}
+  #add:hover{color:#999;border-color:#444}
+</style>
+</head>
+<body>
+  <div id="clock">--:--</div>
+  <div id="date"></div>
+  <div class="divider"></div>
+  <div id="arabic"></div>
+  <div id="trans"></div>
+  <div id="ref"></div>
+  <div id="refresh" onclick="nextReminder()">&#8635; another reminder</div>
+  <div id="marks"></div>
+<script>
+const reminders=[
+{ar:"وَاذْكُر رَّبَّكَ إِذَا نَسِيتَ",tr:"And remember your Lord when you forget.",ref:"Al-Kahf 18:24"},
+{ar:"فَإِنَّ مَعَ الْعُسْرِ يُسْرًا",tr:"Indeed, with hardship comes ease.",ref:"Ash-Sharh 94:6"},
+{ar:"إِنَّ اللَّهَ مَعَ الصَّابِرِينَ",tr:"Indeed, Allah is with the patient.",ref:"Al-Baqarah 2:153"},
+{ar:"أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ",tr:"Verily, in the remembrance of Allah do hearts find rest.",ref:"Ar-Ra'd 13:28"},
+{ar:"حَسْبُنَا اللَّهُ وَنِعْمَ الْوَكِيلُ",tr:"Allah is sufficient for us, and He is the best disposer of affairs.",ref:"Aal-Imran 3:173"},
+{ar:"رَّبِّ زِدْنِي عِلْمًا",tr:"My Lord, increase me in knowledge.",ref:"Ta-Ha 20:114"},
+{ar:"وَهُوَ مَعَكُمْ أَيْنَ مَا كُنتُمْ",tr:"And He is with you wherever you are.",ref:"Al-Hadid 57:4"},
+{ar:"إِنَّ اللَّهَ لَا يُضِيعُ أَجْرَ الْمُحْسِنِينَ",tr:"Indeed, Allah does not let the reward of the doers of good be lost.",ref:"At-Tawbah 9:120"},
+{ar:"وَتَوَكَّلْ عَلَى اللَّهِ",tr:"And put your trust in Allah.",ref:"Al-Ahzab 33:3"},
+{ar:"وَبَشِّرِ الصَّابِرِينَ",tr:"And give good tidings to the patient.",ref:"Al-Baqarah 2:155"},
+{ar:"لَا تَحْزَنْ إِنَّ اللَّهَ مَعَنَا",tr:"Do not grieve; indeed Allah is with us.",ref:"At-Tawbah 9:40"},
+{ar:"وَمَن يَتَّقِ اللَّهَ يَجْعَل لَّهُ مَخْرَجًا",tr:"Whoever fears Allah, He will make a way out for him.",ref:"At-Talaq 65:2"}
+];
+let idx=Math.floor(Math.random()*reminders.length);
+function showR(){const r=reminders[idx];arabic.textContent=r.ar;trans.textContent='"'+r.tr+'"';ref.textContent=r.ref}
+function nextReminder(){idx=(idx+1)%reminders.length;showR()}
+
+const DEFAULTS=[
+{name:"GitHub",url:"https://github.com",label:"GH"},
+{name:"Gmail",url:"https://mail.google.com",label:"@"},
+{name:"YouTube",url:"https://youtube.com",label:"YT"}
+];
+function load(){try{const s=localStorage.getItem('marks');return s?JSON.parse(s):DEFAULTS}catch(e){return DEFAULTS}}
+function save(m){try{localStorage.setItem('marks',JSON.stringify(m))}catch(e){}}
+let marks=load();
+function host(u){try{return new URL(u).hostname.replace('www.','')[0].toUpperCase()}catch(e){return '?'}}
+function render(){
+  const c=document.getElementById('marks');c.innerHTML='';
+  marks.forEach((m,i)=>{
+    const a=document.createElement('a');a.className='mark';a.href=m.url;
+    a.innerHTML='<span class="ic">'+(m.label||host(m.url))+'</span>'+m.name+'<span class="del" title="remove">&times;</span>';
+    a.querySelector('.del').onclick=(e)=>{e.preventDefault();e.stopPropagation();marks.splice(i,1);save(marks);render()};
+    c.appendChild(a);
+  });
+  const add=document.createElement('div');add.id='add';add.innerHTML='<span style="font-size:22px">+</span>add';
+  add.onclick=()=>{
+    const url=prompt('Website URL (e.g. https://example.com):');if(!url)return;
+    const full=url.startsWith('http')?url:'https://'+url;
+    const name=prompt('Name:','')||host(full);
+    marks.push({name:name,url:full});save(marks);render();
+  };
+  c.appendChild(add);
+}
+function tick(){const n=new Date();clock.textContent=n.toTimeString().slice(0,5);date.textContent=n.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'}).toLowerCase()}
+showR();render();tick();setInterval(tick,1000);
+</script>
+</body>
+</html>
